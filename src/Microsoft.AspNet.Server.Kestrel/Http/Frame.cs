@@ -639,7 +639,12 @@ namespace Microsoft.AspNet.Server.Kestrel.Http
                 {
                     return false;
                 }
-                var method = begin.GetAsciiString(scan);
+
+                string method;
+                if (!begin.GetHttpMethodString(out method))
+                {
+                    method = begin.GetAsciiString(scan);
+                }
 
                 scan.Take();
                 begin = scan;

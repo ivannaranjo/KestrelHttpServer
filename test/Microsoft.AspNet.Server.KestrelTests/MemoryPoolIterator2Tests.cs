@@ -128,5 +128,38 @@ namespace Microsoft.AspNet.Server.KestrelTests
             // Can't put anything by the end
             Assert.False(head.Put(0xFF));
         }
+
+        [Theory]
+        [InlineData("CONNECT ", true, MemoryPoolIterator2Extenstions.HttpConnectMethod)]
+        [InlineData("DELETE ", true, MemoryPoolIterator2Extenstions.HttpDeleteMethod)]
+        [InlineData("GET ", true, MemoryPoolIterator2Extenstions.HttpGetMethod)]
+        [InlineData("HEAD ", true, MemoryPoolIterator2Extenstions.HttpHeadMethod)]
+        [InlineData("PATCH ", true, MemoryPoolIterator2Extenstions.HttpPatchMethod)]
+        [InlineData("POST ", true, MemoryPoolIterator2Extenstions.HttpPostMethod)]
+        [InlineData("PUT ", true, MemoryPoolIterator2Extenstions.HttpPutMethod)]
+        [InlineData("OPTIONS ", true, MemoryPoolIterator2Extenstions.HttpOptionsMethod)]
+        [InlineData("TRACE ", true, MemoryPoolIterator2Extenstions.HttpTraceMethod)]
+        [InlineData("GET_", false, null)]
+        [InlineData("GOT ", false, null)]
+        [InlineData("ABC", false, null)]
+        [InlineData("PO", false, null)]
+        [InlineData("head", false, null)]
+        public void GetsHttpMethodString(string input, bool expectedResult, string expectedHttpMethod)
+        {
+            // Arrange
+            var block = _pool.Lease();
+            var chars = input.ToCharArray().Select(c => (byte)c).ToArray();
+            Buffer.BlockCopy(chars, 0, block.Array, block.Start, chars.Length);
+            block.End += chars.Length;
+            var scan = block.GetIterator();
+            string httpMethod;
+
+            // Act
+            var result = scan.GetHttpMethodString(out httpMethod);
+
+            // Assert
+            Assert.Equal(expectedResult, result);
+            Assert.Equal(expectedHttpMethod, httpMethod);
+        }
     }
 }

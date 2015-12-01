@@ -12,6 +12,16 @@ namespace Microsoft.AspNet.Server.Kestrel.Infrastructure
 
         private static Encoding _utf8 = Encoding.UTF8;
 
+        public const string HttpConnectMethod = "CONNECT";
+        public const string HttpDeleteMethod = "DELETE";
+        public const string HttpGetMethod = "GET";
+        public const string HttpHeadMethod = "HEAD";
+        public const string HttpPatchMethod = "PATCH";
+        public const string HttpPostMethod = "POST";
+        public const string HttpPutMethod = "PUT";
+        public const string HttpOptionsMethod = "OPTIONS";
+        public const string HttpTraceMethod = "TRACE";
+
         private static unsafe string GetAsciiStringStack(byte[] input, int inputOffset, int length)
         {
             // avoid declaring other local vars, or doing work with stackalloc
@@ -202,6 +212,115 @@ namespace Microsoft.AspNet.Server.Kestrel.Infrastructure
             var array = new byte[length];
             start.CopyTo(array, 0, length, out length);
             return new ArraySegment<byte>(array, 0, length);
+        }
+
+        public static bool GetHttpMethodString(this MemoryPoolIterator2 scan, out string httpMethod)
+        {
+            var firstChar = scan.Take();
+            httpMethod = null;
+
+            if (firstChar == 'C')
+            {
+                if (scan.Take() == 'O' &&
+                    scan.Take() == 'N' &&
+                    scan.Take() == 'N' &&
+                    scan.Take() == 'E' &&
+                    scan.Take() == 'C' &&
+                    scan.Take() == 'T' &&
+                    scan.Take() == ' ')
+                {
+                    httpMethod = HttpConnectMethod;
+                }
+            }
+            else if (firstChar == 'D')
+            {
+                if (scan.Take() == 'E' &&
+                    scan.Take() == 'L' &&
+                    scan.Take() == 'E' &&
+                    scan.Take() == 'T' &&
+                    scan.Take() == 'E' &&
+                    scan.Take() == ' ')
+                {
+                    httpMethod = HttpDeleteMethod;
+                }
+            }
+            else if (firstChar == 'G')
+            {
+                if (scan.Take() == 'E' &&
+                    scan.Take() == 'T' &&
+                    scan.Take() == ' ')
+                {
+                    httpMethod = HttpGetMethod;
+                }
+            }
+            else if (firstChar == 'H')
+            {
+                if (scan.Take() == 'E' &&
+                    scan.Take() == 'A' &&
+                    scan.Take() == 'D' &&
+                    scan.Take() == ' ')
+                {
+                    httpMethod = HttpHeadMethod;
+                }
+            }
+            else if (firstChar == 'P')
+            {
+                var nextChar = scan.Take();
+
+                if (nextChar == 'A')
+                {
+                    if (scan.Take() == 'T' &&
+                        scan.Take() == 'C' &&
+                        scan.Take() == 'H' &&
+                        scan.Take() == ' ')
+                    {
+                        httpMethod = HttpPatchMethod;
+                    }
+                }
+                if (nextChar == 'O')
+                {
+                    if (scan.Take() == 'S' &&
+                        scan.Take() == 'T' &&
+                        scan.Take() == ' ')
+                    {
+                        httpMethod = HttpPostMethod;
+                    }
+                }
+                if (nextChar == 'U')
+                {
+                    if (scan.Take() == 'T' &&
+                    scan.Take() == ' ')
+                    {
+                        httpMethod = HttpPutMethod;
+                    }
+                }
+            }
+            else if (firstChar == 'O')
+            {
+                if (scan.Take() == 'P' &&
+                    scan.Take() == 'T' &&
+                    scan.Take() == 'I' &&
+                    scan.Take() == 'O' &&
+                    scan.Take() == 'N' &&
+                    scan.Take() == 'S' &&
+                    scan.Take() == ' ')
+                {
+                    httpMethod = HttpOptionsMethod;
+                }
+            }
+            else if (firstChar == 'T')
+            {
+                if (scan.Take() == 'R' &&
+                    scan.Take() == 'A' &&
+                    scan.Take() == 'C' &&
+                    scan.Take() == 'E' &&
+                    scan.Take() == ' ')
+                {
+                    httpMethod = HttpTraceMethod;
+                }
+            }
+
+            return httpMethod != null;
         }
     }
 }
