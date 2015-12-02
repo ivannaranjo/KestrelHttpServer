@@ -254,33 +254,33 @@ namespace Microsoft.AspNet.Server.Kestrel.Infrastructure
                 return false;
             }
 
-            if (scanLong == _httpConnectMethodLong)
-            {
-                httpMethod = HttpConnectMethod;
-            }
-            else if (((scanLong ^ _httpDeleteMethodLong) << 8) == 0)
-            {
-                httpMethod = HttpDeleteMethod;
-            }
-            else if (((scanLong ^ _httpGetMethodLong) << 32) == 0)
+            if (((scanLong ^ _httpGetMethodLong) << 32) == 0)
             {
                 httpMethod = HttpGetMethod;
-            }
-            else if (((scanLong ^ _httpHeadMethodLong) << 24) == 0)
-            {
-                httpMethod = HttpHeadMethod;
-            }
-            else if (((scanLong ^ _httpPatchMethodLong) << 16) == 0)
-            {
-                httpMethod = HttpPatchMethod;
             }
             else if (((scanLong ^ _httpPostMethodLong) << 24) == 0)
             {
                 httpMethod = HttpPostMethod;
             }
+            else if (((scanLong ^ _httpDeleteMethodLong) << 8) == 0)
+            {
+                httpMethod = HttpDeleteMethod;
+            }
+            else if (((scanLong ^ _httpHeadMethodLong) << 24) == 0)
+            {
+                httpMethod = HttpHeadMethod;
+            }
             else if (((scanLong ^ _httpPutMethodLong) << 32) == 0)
             {
                 httpMethod = HttpPutMethod;
+            }
+            else if (scanLong == _httpConnectMethodLong)
+            {
+                httpMethod = HttpConnectMethod;
+            }
+            else if (((scanLong ^ _httpPatchMethodLong) << 16) == 0)
+            {
+                httpMethod = HttpPatchMethod;
             }
             else if (scanLong == _httpOptionsMethodLong)
             {
