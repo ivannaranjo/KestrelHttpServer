@@ -218,5 +218,32 @@ namespace Microsoft.AspNet.Server.KestrelTests
             Assert.Equal(expectedResult, result);
             Assert.Equal(expectedHttpMethod, httpMethod);
         }
+
+        [Theory]
+        [InlineData("HTTP/1.0\r", true, MemoryPoolIterator2Extensions.Http10Version)]
+        [InlineData("HTTP/1.1\r", true, MemoryPoolIterator2Extensions.Http11Version)]
+        [InlineData("HTTP/1.0a", false, null)]
+        [InlineData("HTTP/1.1a", false, null)]
+        [InlineData("HTTP/3.0\r", false, null)]
+        [InlineData("http/1.0\r", false, null)]
+        [InlineData("http/1.1\r", false, null)]
+        [InlineData("short", false, null)] // Less than 8 bytes input
+        public void GetsHttpVersionString(string input, bool expectedResult, string expectedHttpVersion)
+        {
+            // Arrange
+            var block = _pool.Lease();
+            var chars = input.ToCharArray().Select(c => (byte)c).ToArray();
+            Buffer.BlockCopy(chars, 0, block.Array, block.Start, chars.Length);
+            block.End += chars.Length;
+            var scan = block.GetIterator();
+            string httpVersion;
+
+            // Act
+            var result = scan.GetHttpVersionString(out httpVersion);
+
+            // Assert
+            Assert.Equal(expectedResult, result);
+            Assert.Equal(expectedHttpVersion, httpVersion);
+        }
     }
 }

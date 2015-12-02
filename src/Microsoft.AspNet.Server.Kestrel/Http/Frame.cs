@@ -677,7 +677,12 @@ namespace Microsoft.AspNet.Server.Kestrel.Http
                 {
                     return false;
                 }
-                var httpVersion = begin.GetAsciiString(scan);
+
+                string httpVersion;
+                if (!begin.GetHttpVersionString(out httpVersion))
+                {
+                    httpVersion = begin.GetAsciiString(scan);
+                }
 
                 scan.Take();
                 if (scan.Take() != '\n')

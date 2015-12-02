@@ -23,6 +23,9 @@ namespace Microsoft.AspNet.Server.Kestrel.Infrastructure
         public const string HttpOptionsMethod = "OPTIONS";
         public const string HttpTraceMethod = "TRACE";
 
+        public const string Http10Version = "HTTP/1.0";
+        public const string Http11Version = "HTTP/1.1";
+
         private static long _httpConnectMethodLong = GetAsciiStringAsLong("CONNECT ");
         private static long _httpDeleteMethodLong = GetAsciiStringAsLong("DELETE  ");
         private static long _httpGetMethodLong = GetAsciiStringAsLong("GET     ");
@@ -32,6 +35,9 @@ namespace Microsoft.AspNet.Server.Kestrel.Infrastructure
         private static long _httpPutMethodLong = GetAsciiStringAsLong("PUT     ");
         private static long _httpOptionsMethodLong = GetAsciiStringAsLong("OPTIONS ");
         private static long _httpTraceMethodLong = GetAsciiStringAsLong("TRACE   ");
+
+        private static long _http10VersionLong = GetAsciiStringAsLong("HTTP/1.0");
+        private static long _http11VersionLong = GetAsciiStringAsLong("HTTP/1.1");
 
         private unsafe static long GetAsciiStringAsLong(string str)
         {
@@ -286,6 +292,43 @@ namespace Microsoft.AspNet.Server.Kestrel.Infrastructure
             }
 
             return httpMethod != null;
+        }
+
+        public static bool GetHttpVersionString(this MemoryPoolIterator2 scan, out string httpVersion)
+        {
+            httpVersion = null;
+            var scanLong = scan.PeekLong();
+
+            if (scanLong == -1)
+            {
+                return false;
+            }
+
+            if (scanLong == _http10VersionLong)
+            {
+                httpVersion = Http10Version;
+            }
+            else if (scanLong == _http11VersionLong)
+            {
+                httpVersion = Http11Version;
+            }
+
+            if (httpVersion != null)
+            {
+                for (int i = 0; i < 8; i++) scan.Take();
+
+                if (scan.Peek() == '\r')
+                {
+                    return true;
+                }
+                else
+                {
+                    httpVersion = null;
+                    return false;
+                }
+            }
+
+            return false;
         }
     }
 }
