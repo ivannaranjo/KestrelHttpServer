@@ -304,18 +304,18 @@ namespace Microsoft.AspNet.Server.Kestrel.Infrastructure
                 return false;
             }
 
-            if (scanLong == _http10VersionLong)
-            {
-                httpVersion = Http10Version;
-            }
-            else if (scanLong == _http11VersionLong)
+            if (scanLong == _http11VersionLong)
             {
                 httpVersion = Http11Version;
+            }
+            else if (scanLong == _http10VersionLong)
+            {
+                httpVersion = Http10Version;
             }
 
             if (httpVersion != null)
             {
-                for (int i = 0; i < 8; i++) scan.Take();
+                for (int i = 0; i < httpVersion.Length; i++) scan.Take();
 
                 if (scan.Peek() == '\r')
                 {
