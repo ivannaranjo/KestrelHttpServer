@@ -198,9 +198,12 @@ namespace Microsoft.AspNet.Server.Kestrel.Http
 
                             await ProduceEnd();
 
-                            while (await RequestBody.ReadAsync(_nullBuffer, 0, _nullBuffer.Length) != 0)
+                            if (_keepAlive)
                             {
-                                // Finish reading the request body in case the app did not.
+                                while (await RequestBody.ReadAsync(_nullBuffer, 0, _nullBuffer.Length) != 0)
+                                {
+                                    // Finish reading the request body in case the app did not.
+                                }
                             }
                         }
 
