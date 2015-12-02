@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Diagnostics;
 using System.Text;
 
 namespace Microsoft.AspNet.Server.Kestrel.Infrastructure
@@ -22,6 +23,28 @@ namespace Microsoft.AspNet.Server.Kestrel.Infrastructure
         public const string HttpOptionsMethod = "OPTIONS";
         public const string HttpTraceMethod = "TRACE";
 
+        private static long _httpConnectMethodLong = GetAsciiStringAsLong("CONNECT ");
+        private static long _httpDeleteMethodLong = GetAsciiStringAsLong("DELETE  ");
+        private static long _httpGetMethodLong = GetAsciiStringAsLong("GET     ");
+        private static long _httpHeadMethodLong = GetAsciiStringAsLong("HEAD    ");
+        private static long _httpPatchMethodLong = GetAsciiStringAsLong("PATCH   ");
+        private static long _httpPostMethodLong = GetAsciiStringAsLong("POST    ");
+        private static long _httpPutMethodLong = GetAsciiStringAsLong("PUT     ");
+        private static long _httpOptionsMethodLong = GetAsciiStringAsLong("OPTIONS ");
+        private static long _httpTraceMethodLong = GetAsciiStringAsLong("TRACE   ");
+
+        private unsafe static long GetAsciiStringAsLong(string str)
+        {
+            Debug.Assert(str.Length == 8, "String must be exactly 8 (ASCII) characters long.");
+
+            var bytes = Encoding.ASCII.GetBytes(str);
+
+            fixed (byte* ptr = bytes)
+            {
+                return *(long*)ptr;
+            }
+        }
+
         private static unsafe string GetAsciiStringStack(byte[] input, int inputOffset, int length)
         {
             // avoid declaring other local vars, or doing work with stackalloc
@@ -30,6 +53,7 @@ namespace Microsoft.AspNet.Server.Kestrel.Infrastructure
 
             return GetAsciiStringImplementation(output, input, inputOffset, length);
         }
+
         private static unsafe string GetAsciiStringImplementation(char* output, byte[] input, int inputOffset, int length)
         {
             for (var i = 0; i < length; i++)
@@ -216,108 +240,49 @@ namespace Microsoft.AspNet.Server.Kestrel.Infrastructure
 
         public static bool GetHttpMethodString(this MemoryPoolIterator2 scan, out string httpMethod)
         {
-            var firstChar = scan.Take();
             httpMethod = null;
+            var scanLong = scan.PeekLong();
 
-            if (firstChar == 'C')
+            if (scanLong == -1)
             {
-                if (scan.Take() == 'O' &&
-                    scan.Take() == 'N' &&
-                    scan.Take() == 'N' &&
-                    scan.Take() == 'E' &&
-                    scan.Take() == 'C' &&
-                    scan.Take() == 'T' &&
-                    scan.Take() == ' ')
-                {
-                    httpMethod = HttpConnectMethod;
-                }
+                return false;
             }
-            else if (firstChar == 'D')
-            {
-                if (scan.Take() == 'E' &&
-                    scan.Take() == 'L' &&
-                    scan.Take() == 'E' &&
-                    scan.Take() == 'T' &&
-                    scan.Take() == 'E' &&
-                    scan.Take() == ' ')
-                {
-                    httpMethod = HttpDeleteMethod;
-                }
-            }
-            else if (firstChar == 'G')
-            {
-                if (scan.Take() == 'E' &&
-                    scan.Take() == 'T' &&
-                    scan.Take() == ' ')
-                {
-                    httpMethod = HttpGetMethod;
-                }
-            }
-            else if (firstChar == 'H')
-            {
-                if (scan.Take() == 'E' &&
-                    scan.Take() == 'A' &&
-                    scan.Take() == 'D' &&
-                    scan.Take() == ' ')
-                {
-                    httpMethod = HttpHeadMethod;
-                }
-            }
-            else if (firstChar == 'P')
-            {
-                var nextChar = scan.Take();
 
-                if (nextChar == 'A')
-                {
-                    if (scan.Take() == 'T' &&
-                        scan.Take() == 'C' &&
-                        scan.Take() == 'H' &&
-                        scan.Take() == ' ')
-                    {
-                        httpMethod = HttpPatchMethod;
-                    }
-                }
-                if (nextChar == 'O')
-                {
-                    if (scan.Take() == 'S' &&
-                        scan.Take() == 'T' &&
-                        scan.Take() == ' ')
-                    {
-                        httpMethod = HttpPostMethod;
-                    }
-                }
-                if (nextChar == 'U')
-                {
-                    if (scan.Take() == 'T' &&
-                    scan.Take() == ' ')
-                    {
-                        httpMethod = HttpPutMethod;
-                    }
-                }
-            }
-            else if (firstChar == 'O')
+            if (scanLong == _httpConnectMethodLong)
             {
-                if (scan.Take() == 'P' &&
-                    scan.Take() == 'T' &&
-                    scan.Take() == 'I' &&
-                    scan.Take() == 'O' &&
-                    scan.Take() == 'N' &&
-                    scan.Take() == 'S' &&
-                    scan.Take() == ' ')
-                {
-                    httpMethod = HttpOptionsMethod;
-                }
+                httpMethod = HttpConnectMethod;
             }
-            else if (firstChar == 'T')
+            else if (((scanLong ^ _httpDeleteMethodLong) << 8) == 0)
             {
-                if (scan.Take() == 'R' &&
-                    scan.Take() == 'A' &&
-                    scan.Take() == 'C' &&
-                    scan.Take() == 'E' &&
-                    scan.Take() == ' ')
-                {
-                    httpMethod = HttpTraceMethod;
-                }
+                httpMethod = HttpDeleteMethod;
+            }
+            else if (((scanLong ^ _httpGetMethodLong) << 32) == 0)
+            {
+                httpMethod = HttpGetMethod;
+            }
+            else if (((scanLong ^ _httpHeadMethodLong) << 24) == 0)
+            {
+                httpMethod = HttpHeadMethod;
+            }
+            else if (((scanLong ^ _httpPatchMethodLong) << 16) == 0)
+            {
+                httpMethod = HttpPatchMethod;
+            }
+            else if (((scanLong ^ _httpPostMethodLong) << 24) == 0)
+            {
+                httpMethod = HttpPostMethod;
+            }
+            else if (((scanLong ^ _httpPutMethodLong) << 32) == 0)
+            {
+                httpMethod = HttpPutMethod;
+            }
+            else if (scanLong == _httpOptionsMethodLong)
+            {
+                httpMethod = HttpOptionsMethod;
+            }
+            else if (((scanLong ^ _httpTraceMethodLong) << 16) == 0)
+            {
+                httpMethod = HttpTraceMethod;
             }
 
             return httpMethod != null;
